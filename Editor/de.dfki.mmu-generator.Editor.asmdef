@@ -1,0 +1,13 @@
+{
+    "name": "dfki.mmu-generator.Editor",
+    "references": ["dfki.mmiunity-core.Editor", "dfki.mmiunity-core", "System.CodeDom.Compiler", "UnityEditor.Compilation", "System.Runtime"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,13 @@
+{
+    "name": "dfki.mmu-generator",
+    "references": ["dfki.mmiunity-core"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
