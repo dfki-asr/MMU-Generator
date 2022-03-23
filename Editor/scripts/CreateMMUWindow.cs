@@ -16,24 +16,27 @@ public class CreateMMUWindow : EditorWindow
     private const string defaultScenePath = "Assets/default.unity";
     private void OnGUI()
     {
-        if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiCompatibilityLevel.NET_Standard_2_0)
-        {
-            if (GUILayout.Button("Set API compatibility level to .NETSTANDARD 2.0"))
-            {
-                PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.Standalone, ApiCompatibilityLevel.NET_Standard_2_0);
-                Utils.TriggerScriptReload();
-            }
-            return;
-        }
+        /*
+
+if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiCompatibilityLevel.NET_Standard_2_0)
+{
+    if (GUILayout.Button("Set API compatibility level to .NETSTANDARD 2.0"))
+    {
+        PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.Standalone, ApiCompatibilityLevel.NET_Standard_2_0);
+        Utils.TriggerScriptReload();
+    }
+    return;
+}
 
         /*
-        if (EditorSceneManager.GetActiveScene() != EditorSceneManager.GetSceneByPath(defaultScenePath)) {
-            if (GUILayout.Button("Open default scene"))
-            {
-                EditorSceneManager.OpenScene(defaultScenePath, OpenSceneMode.Single);
-            }            
-            return;
-        } */       
+    if (EditorSceneManager.GetActiveScene() != EditorSceneManager.GetSceneByPath(defaultScenePath)) {
+        if (GUILayout.Button("Open default scene"))
+        {
+            EditorSceneManager.OpenScene(defaultScenePath, OpenSceneMode.Single);
+        }            
+        return;
+    }        */
+
 
         if (mmuCreation == null)
         {
@@ -75,9 +78,11 @@ public class CreateMMUWindow : EditorWindow
         else if (mmuCreation.Status == MMUCreation.CreationStatus.Completed)
         {
             this.mmuCreation.Description.Version = EditorGUILayout.TextField("Version", this.mmuCreation.Description.Version);
-            if (GUILayout.Button("Export as zip file"))
+            if (GUILayout.Button("Export MMU-Project to Folder"))
             {
-                string selectedFilePath = EditorUtility.SaveFilePanel("Export zip file destination", "", "", "zip");
+                //string selectedFilePath = EditorUtility.SaveFilePanel("Export zip file destination", "", "", "zip");
+                string hint = Path.GetDirectoryName(Path.GetDirectoryName(Application.dataPath));
+                string selectedFilePath = EditorUtility.SaveFolderPanel("Export zip file destination", hint, "");
                 if (!string.IsNullOrEmpty(selectedFilePath))
                 {
                     MMUFactory.Export(mmuCreation, selectedFilePath);

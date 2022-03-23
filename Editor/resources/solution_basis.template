@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>build/</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\dfki.mmiunity-core\dfki.mmiunity-core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>..\dfki.mmiunity-core\MMIUnity-Core\Runtime\plugins\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="Thrift">
+      <HintPath>..\dfki.mmiunity-core\MMIUnity-Core\Runtime\plugins\Thrift.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>..\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="Utf8Json">
+      <HintPath>..\dfki.mmiunity-core\MMIUnity-Core\Runtime\plugins\Utf8Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="description.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="REPLACE_ASSETDB_NAME">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="cd $(TargetDir)&#xD;&#xA;del Thrift.dll&#xD;&#xA;del UnityEngine.dll&#xD;&#xA;del Utf8Json.dll&#xD;&#xA;del dfki.mmiunity-core.dll&#xD;&#xA;del dfki.mmiunity-core.pdb&#xD;&#xA;del System.Threading.Tasks.Extensions.dll&#xD;&#xA;cd ..&#xD;&#xA;rmdir /s /q &quot;MMU_NAME&quot;&#xD;&#xA;ren &quot;$(TargetDir)&quot; &quot;MMU_NAME&quot;&#xD;&#xA;&#xD;&#xA;" />
+  </Target>
+
+</Project>

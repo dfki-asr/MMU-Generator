@@ -2,20 +2,22 @@
   "name": "de.dfki.mmu-generator",
   "version": "0.0.1",
   "displayName": "MMU Generator",
-  "description": "This is the MMU Generator package. ",
+  "description": "This is the MMU Generator package.",
   "unity": "2019.4",
   "documentationUrl": "https://mosim.eu",
   "changelogUrl": "https://mosim.eu/changelog.html",
   "licensesUrl": "https://mosim.eu/licensing.html",
-  "dependencies": { "com.unity.nuget.newtonsoft-json":"2.0.0"},
- "keywords": [
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "2.0.0"
+  },
+  "keywords": [
     "MOSIM",
-	"Animation"
+    "Animation"
   ],
   "author": {
     "name": "Janis Sprenger",
     "email": "janis.sprenger@dfki.de",
     "url": "https://www.dfki.de"
-  }
+  },
+  "hideInEditor": false
 }
-

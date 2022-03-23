@@ -131,10 +131,10 @@ public class MMUGenerator
         using(CodeDomProvider com = CodeDomProvider.CreateProvider("CSharp"))
         {
 
-            var csCompile = new Modified.Mono.CSharp.CSharpCodeCompiler();
-            CompilerResults r = csCompile.CompileAssemblyFromSourceBatch(parameters, classes.ToArray());
+            //var csCompile = new Modified.Mono.CSharp.CSharpCodeCompiler();
+            //CompilerResults r = csCompile.CompileAssemblyFromSourceBatch(parameters, classes.ToArray());
             //Compile the dlls
-            //CompilerResults r = com.CompileAssemblyFromSource(parameters, classes.ToArray());
+            CompilerResults r = com.CompileAssemblyFromSource(parameters, classes.ToArray());
 
             bool success = true;
 
@@ -224,7 +224,6 @@ public class MMUGenerator
         System.IO.File.WriteAllText(path + "description.json", MMICSharp.Common.Communication.Serialization.ToJsonString(description));
     }
 
-
     /// <summary>
     /// Method cleans up the given directory and removes the files that are not relevant for the MMU
     /// </summary>
@@ -251,11 +250,11 @@ public class MMUGenerator
                 File.Delete(files[i]);
             }
 
-
+            /*
             if (defaultFiles.Exists(s => s.Contains(System.IO.Path.GetFileNameWithoutExtension(files[i]))))
             {
                 File.Delete(files[i]);
-            }
+            }*/
 
             if(Path.GetFileName(files[i]) == "UnityEngine.dll")
             {
