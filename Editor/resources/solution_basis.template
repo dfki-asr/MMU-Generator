@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd $(TargetDir)&#xD;&#xA;del Thrift.dll&#xD;&#xA;del UnityEngine.dll&#xD;&#xA;del Utf8Json.dll&#xD;&#xA;del dfki.mmiunity-core.dll&#xD;&#xA;del dfki.mmiunity-core.pdb&#xD;&#xA;del System.Threading.Tasks.Extensions.dll&#xD;&#xA;cd ..&#xD;&#xA;rmdir /s /q &quot;MMU_NAME&quot;&#xD;&#xA;ren &quot;$(TargetDir)&quot; &quot;MMU_NAME&quot;&#xD;&#xA;&#xD;&#xA;" />
+    <Exec Command="cd $(TargetDir)&#xD;&#xA;del Thrift.dll&#xD;&#xA;del UnityEngine.dll&#xD;&#xA;del Utf8Json.dll&#xD;&#xA;del dfki.mmiunity-core.dll&#xD;&#xA;del dfki.mmiunity-core.pdb&#xD;&#xA;del System.Threading.Tasks.Extensions.dll&#xD;&#xA;cd ..&#xD;&#xA;rmdir /s /q &quot;MMU_NAME&quot;&#xD;&#xA;ren &quot;$(TargetDir)&quot; &quot;MMU_NAME&quot;&#xD;&#xA;IF NOT EXIST &quot;..\build\&quot; (&#xD;&#xA;    mkdir ..\build\&#xD;&#xA;)&#xD;&#xA;dir ..\..&#xD;&#xA;cmd /c xcopy /S/Y/Q &quot;MMU_NAME&quot; &quot;..\..\build\MMU_NAME\&quot;" />
   </Target>
 
 </Project>
