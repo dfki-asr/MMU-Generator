@@ -52,7 +52,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         }
         if (mmuCreation.Status == MMUCreation.CreationStatus.Created)
         {
-            this.mmuCreation.Description.Name = EditorGUILayout.TextField("Name", this.mmuCreation.Description.Name);
+            this.mmuCreation.Description.Name = EditorGUILayout.TextField("Name*", this.mmuCreation.Description.Name);
             this.mmuCreation.Description.MotionType = EditorGUILayout.TextField("MotionType", this.mmuCreation.Description.MotionType);
             this.mmuCreation.Description.Author = EditorGUILayout.TextField("Author", this.mmuCreation.Description.Author);
             this.mmuCreation.Description.ShortDescription = EditorGUILayout.TextField("ShortDescription", this.mmuCreation.Description.ShortDescription);
@@ -70,10 +70,23 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                 }
             }
             EditorGUILayout.EndToggleGroup();
+            bool notcomplete = false;
+            if (this.mmuCreation.Description.Name != null)
+                if (this.mmuCreation.Description.Name == "")
+                    notcomplete = true;
+                else
+                    notcomplete = false;
+            else
+                notcomplete = true;
+
+            EditorGUI.BeginDisabledGroup(notcomplete);
             if (GUILayout.Button("Setup"))
             {
                 MMUFactory.Setup(mmuCreation);
             }
+            EditorGUI.EndDisabledGroup();
+            if (notcomplete)
+                EditorGUILayout.HelpBox("Please fill out the required fields.", MessageType.Warning);
         }
         else if (mmuCreation.Status == MMUCreation.CreationStatus.Completed)
         {
@@ -132,7 +145,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
     private void Awake()
     {
         Debug.Log("CreateMMUWindow awake");
-        if (!CreationStorage.TryLoadCurrent(CreationStorage.Location.Both, out this.mmuCreation))
+        if (!CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out this.mmuCreation))
         {
             this.mmuCreation = MMUFactory.New();
             EditorApplication.quitting += OnEditorQuitting;
