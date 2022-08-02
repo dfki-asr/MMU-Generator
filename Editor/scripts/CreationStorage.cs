@@ -1,9 +1,11 @@
 ﻿#if UNITY_EDITOR
+using MMICSharp.Common.Communication;
 using MMIStandard;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -28,9 +30,19 @@ public static class CreationStorage
     /// </summary>
     /// <param name="current">The progress to save</param>
     /// <param name="location">Where the progress should be saved</param>
-    public static void SaveCurrent(MMUCreation current, Location location)
+    public static void SaveCurrent(MMUCreation current, bool fileStructureCreated = true)
     {
-        Save(CURRENT_CREATION_NAME, current, location);
+        
+        if (fileStructureCreated)
+        {
+            if (File.Exists("Assets//SaveFile.json"))
+                File.Delete("Assets//SaveFile.json");
+            SaveWithPath(current, "Assets//MMUs//" + current.Description.Name + "//SaveFiles//");
+        }
+        else
+            SaveWithPath(current);
+        
+        //Save(CURRENT_CREATION_NAME, current, CreationStorage.Location.Session);
     }
 
     /// <summary>
@@ -39,9 +51,11 @@ public static class CreationStorage
     /// <param name="location">Where to load the current progress from</param>
     /// <param name="current"></param>
     /// <returns></returns>
-    public static bool TryLoadCurrent(Location location, out MMUCreation current)
+    public static bool TryLoadCurrent(string path, out MMUCreation current)
     {
-        current = Load(CURRENT_CREATION_NAME, location);
+
+        current = LoadWithPath(path);
+        //current = Load(CURRENT_CREATION_NAME, CreationStorage.Location.Session);
         return current != null;
     }
 
@@ -92,6 +106,8 @@ public static class CreationStorage
         return null;
     }
 
+
+
     /// <summary>
     /// Saves the progress as JSON for given key at defined location.
     /// </summary>
@@ -114,6 +130,55 @@ public static class CreationStorage
                 Save(key, creation, Location.Disk);
                 break;
         }
+    }
+
+    private static void SaveWithPath(MMUCreation creation, string path = "Assets//")
+    {
+        string json = JsonConvert.SerializeObject(creation, Formatting.Indented, new MMUCreationConverter(), new MMUDescriptionConverter());
+        File.WriteAllText(path + "SaveFile.json" , Serialization.ToJsonString(json));
+    }
+
+    private static MMUCreation LoadWithPath(string path = "Assets//")
+    {
+        if (File.Exists(path + "SaveFile.json"))
+        {
+            string json = File.ReadAllText(path + "SaveFile.json");
+            Debug.Log(json);
+            if (!string.IsNullOrEmpty(json))
+            {
+                MMUCreation mmu = JsonConvert.DeserializeObject<MMUCreation>(Serialization.FromJsonString<string>(json), new MMUCreationConverter(), new MMUDescriptionConverter());
+                //Debug.Log("MMU File: \n" + JsonConvert.SerializeObject(mmu, Formatting.Indented, new MMUCreationConverter(), new MMUDescriptionConverter()));
+                //Debug.Log(mmu.Description.Name);
+                return mmu;
+            }
+            else
+                return null;
+        }
+        else
+            return null;
+    }
+
+    /// <summary>
+    /// Tries to find Savefiles inside the Project folder.
+    /// </summary>
+    /// <returns>A list of all paths to MMU savefiles inside the projects structure.</returns>
+    public static List<string> FindSaveFiles()
+    {
+        List<string> result = new List<string>();
+
+        if (Directory.Exists("Assets//MMUs"))
+        {
+
+            foreach (string dir in Directory.GetDirectories("Assets//MMUs"))
+            {
+                foreach (string subdir in Directory.GetDirectories(dir))
+                {
+                    if (subdir.Contains("Savefiles"))
+                        result.Add(subdir + "//");
+                }
+            }
+        }
+        return result;
     }
 }
 

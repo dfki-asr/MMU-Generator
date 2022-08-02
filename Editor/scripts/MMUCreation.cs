@@ -87,7 +87,7 @@ public class MMUCreation : IDisposable
            {
                 GameObject.DestroyImmediate(this.Instance);
            }
-           string directoryName = $"Assets/{this.Description.Name}";
+           string directoryName = $"Assets/MMUs/{this.Description.Name}";
            if (Directory.Exists(directoryName))
            {
                 Directory.Delete(directoryName, true);

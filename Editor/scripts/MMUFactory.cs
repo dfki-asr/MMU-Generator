@@ -18,7 +18,7 @@ using UnityEngine;
 /// </summary>
 public class MMUFactory
 {
-
+    private static string _selected;
     public static string packageName = "de.dfki.mmu-generator";
     /// <summary>
     /// Creates a new MMU. 
@@ -31,7 +31,7 @@ public class MMUFactory
         var newCreation = new MMUCreation();
         newCreation.Description.Version = "1.0";
         newCreation.Description.MotionType = "";
-        CreationStorage.SaveCurrent(newCreation, CreationStorage.Location.Session);
+        CreationStorage.SaveCurrent(newCreation, false);
         return newCreation;
     }
 
@@ -72,7 +72,7 @@ public class MMUFactory
         BuildPipeline.BuildAssetBundles(tempDirectory, BuildAssetBundleOptions.None, BuildTarget.StandaloneWindows);
 
         //Find all specific class files
-        List<string> classFiles = MMUGenerator.GetFiles("Assets//" + mmuCreation.Description.Name + "//Scripts//").Where(s => Path.GetExtension(s) == ".cs").ToList();
+        List<string> classFiles = MMUGenerator.GetFiles("Assets//MMUs//" + mmuCreation.Description.Name + "//Scripts//").Where(s => Path.GetExtension(s) == ".cs").ToList();
 
         //Add  all common class files
         classFiles.AddRange(MMUGenerator.GetFiles("Assets//MMUGenerator//CommonScripts").Where(s => Path.GetExtension(s) == ".cs").ToList());
@@ -82,7 +82,7 @@ public class MMUFactory
         List<string> dllFiles = MMUGenerator.GetFiles("Assets//MMUGenerator//Dependencies").Where(s => Path.GetExtension(s) == ".dll").ToList();
 
         //Add the specific dependencies for the MMU (if defined)
-        dllFiles.AddRange(MMUGenerator.GetFiles("Assets//" + mmuCreation.Description.Name + "//Dependencies").Where(s => Path.GetExtension(s) == ".dll").ToList());
+        dllFiles.AddRange(MMUGenerator.GetFiles("Assets//MMUs//" + mmuCreation.Description.Name + "//Dependencies").Where(s => Path.GetExtension(s) == ".dll").ToList());
 
         string tmpScripts = Path.Combine(tempDirectory, "Scripts");
         if(!Directory.Exists(tmpScripts))
@@ -118,7 +118,7 @@ public class MMUFactory
         File.WriteAllText($"{tempDirectory}//{mmuCreation.Description.Name}.csproj", solution);
 
         List<string> assets = new List<string>();
-        foreach (var guid in AssetDatabase.FindAssets("*", new string[] { $"Assets//{mmuCreation.Description.Name}" }))
+        foreach (var guid in AssetDatabase.FindAssets("*", new string[] { $"Assets//MMUs//{mmuCreation.Description.Name}" }))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
             assets.Add(path);
@@ -166,7 +166,7 @@ public class MMUFactory
 
         Debug.Log("MMU successfully generated!");
 
-        CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Session);
+        CreationStorage.SaveCurrent(mmuCreation);
 
         return mmuCreation;
     }
@@ -174,9 +174,14 @@ public class MMUFactory
     private static void SetupFileStructure(MMUCreation mmuCreation)
     {
         var description = mmuCreation.Description;
-        Directory.CreateDirectory("Assets//" + description.Name);
-        Directory.CreateDirectory("Assets//" + description.Name + "//Dependencies");
-        Directory.CreateDirectory("Assets//" + description.Name + "//Scripts");
+        //Choose selected
+        _selected = description.Name;
+        Directory.CreateDirectory("Assets//MMUs//" + description.Name);
+        Directory.CreateDirectory("Assets//MMUs//" + description.Name + "//Dependencies");
+        Directory.CreateDirectory("Assets//MMUs//" + description.Name + "//Scripts");
+
+        //Create Directory for Savefiles
+        Directory.CreateDirectory("Assets//MMUs//" + description.Name + "//Savefiles");
 
         //Create a unique id
         description.ID = System.Guid.NewGuid().ToString();
@@ -202,10 +207,10 @@ public class MMUFactory
         mmuTemplate = mmuTemplate.Replace("MOTION_TYPE", description.MotionType);
 
         //Write the class to the location
-        File.WriteAllText("Assets//" + description.Name + "//Scripts//" + description.Name + ".cs", mmuTemplate);
+        File.WriteAllText("Assets//MMUs//" + description.Name + "//Scripts//" + description.Name + ".cs", mmuTemplate);
 
         //Store the description
-        File.WriteAllText("Assets//" + description.Name + "//description.json", Serialization.ToJsonString(description));
+        File.WriteAllText("Assets//MMUs//" + description.Name + "//description.json", Serialization.ToJsonString(description));
 
         Debug.Log("File structure for MMU " + description.Name + " successfully created!");
 
@@ -217,7 +222,7 @@ public class MMUFactory
 
         if (mmuCreation.IsMoCapMMU)
         {
-            var animatorController = AnimatorController.CreateAnimatorControllerAtPath($"Assets/{description.Name}/{description.Name}.controller");
+            var animatorController = AnimatorController.CreateAnimatorControllerAtPath($"Assets/MMUs/{description.Name}/{description.Name}.controller");
             animatorController.AddParameter("AnimationDone", AnimatorControllerParameterType.Bool);
             var firstLayer = animatorController.layers[0]; //first layer is lost when storing as asset -> saving for later
 
@@ -227,7 +232,7 @@ public class MMUFactory
 
             mmuCreation.AnimatorController = animatorController;
 
-            string fbxAssetPath = $@"Assets/{description.Name}/{Path.GetFileName(mmuCreation.FbxFilePath)}";
+            string fbxAssetPath = $@"Assets/MMUs/{description.Name}/{Path.GetFileName(mmuCreation.FbxFilePath)}";
             File.Copy(mmuCreation.FbxFilePath, fbxAssetPath);
 
             AssetImportHelper.PendingMotionImports.Add(fbxAssetPath, () =>
@@ -260,13 +265,13 @@ public class MMUFactory
                 backwardTransition.offset = 0;
 
                 mmuCreation.Status = MMUCreation.CreationStatus.AnimationSetup;
-                CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Session);
+                CreationStorage.SaveCurrent(mmuCreation);
 
             });
         }
 
         mmuCreation.Status = MMUCreation.CreationStatus.FilesSetup;
-        CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Session);
+        CreationStorage.SaveCurrent(mmuCreation);
 
         //Refresh the asset database to show the new filestructure
         AssetDatabase.Refresh();
@@ -274,32 +279,36 @@ public class MMUFactory
 
     public static bool SetupPrefabs()
     {
-        if (CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out MMUCreation mmuCreation))
+        if (_selected != null)
         {
-            var description = mmuCreation.Description;
-            var instance = mmuCreation.Instance;
-            Component c = null;
-            c = instance.GetComponent<UnityMMUBase>();
-
-            if(c != null)
+            if (CreationStorage.TryLoadCurrent("Assets//MMUs//" + _selected + "//Savefiles//", out MMUCreation mmuCreation))
             {
-                //Do the initialization
-                AutoCodeGenerator.SetupBoneMapping(instance);
-                AutoCodeGenerator.AutoGenerateScriptInitialization(instance);
+                var description = mmuCreation.Description;
+                Debug.Log("Test of SetupPrefabs: " + mmuCreation.Instance.transform.childCount);
+                var instance = mmuCreation.Instance;
+                Component c = null;
+                c = instance.GetComponent<UnityMMUBase>();
 
-                //Assign the game joint prefab
-                instance.GetComponent<UnityAvatarBase>().gameJointPrefab = Resources.Load("singleBone") as GameObject;
+                if (c != null)
+                {
+                    //Do the initialization
+                    AutoCodeGenerator.SetupBoneMapping(instance);
+                    AutoCodeGenerator.AutoGenerateScriptInitialization(instance);
 
-                //Create prefab
-                bool success = false;
-                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(instance, $"Assets/{description.Name}/{description.Name}.prefab", out success);
-                Debug.Log("Creating prefab: " + success);
+                    //Assign the game joint prefab
+                    instance.GetComponent<UnityAvatarBase>().gameJointPrefab = Resources.Load("singleBone") as GameObject;
 
-                mmuCreation.Prefab = prefab;
+                    //Create prefab
+                    bool success = false;
+                    GameObject prefab = PrefabUtility.SaveAsPrefabAsset(instance, $"Assets/MMUs/{description.Name}/{description.Name}.prefab", out success);
+                    Debug.Log("Creating prefab: " + success);
 
-                mmuCreation.Status = MMUCreation.CreationStatus.Completed;
-                CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Session);
-                return true;
+                    mmuCreation.Prefab = prefab;
+
+                    mmuCreation.Status = MMUCreation.CreationStatus.Completed;
+                    CreationStorage.SaveCurrent(mmuCreation);
+                    return true;
+                }
             }
         }
         return false;
@@ -314,50 +323,62 @@ public class MMUFactory
     private static void OnScriptsReload()
     {
         Debug.Log("ScriptReloadCallback");
-        if (CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out MMUCreation mmuCreation))
+        if (_selected != null)
         {
-            if (mmuCreation.Status == MMUCreation.CreationStatus.FilesSetup && mmuCreation.IsMoCapMMU)
+            if (CreationStorage.TryLoadCurrent("Assets//MMUs//" + _selected + "//SaveFiles//", out MMUCreation mmuCreation))
             {
-                Debug.Log("Motion setup after script reload");
-
-                string fbxAssetPath = $@"Assets/{mmuCreation.Description.Name}/{Path.GetFileName(mmuCreation.FbxFilePath)}";
-                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(fbxAssetPath);
-
-                var newState = mmuCreation.AnimatorController.AddMotion(animationClip);
-                newState.AddStateMachineBehaviour<AnimationEndEvent>();
-
-                var loopTransition = newState.AddExitTransition();
-                loopTransition.destinationState = newState;
-                loopTransition.exitTime = 1;
-                loopTransition.hasExitTime = true;
-                loopTransition.duration = 0;
-
-                mmuCreation.Status = MMUCreation.CreationStatus.AnimationSetup;
-                CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Session);
-            }
-
-            if (mmuCreation.IsMoCapMMU && mmuCreation.Status == MMUCreation.CreationStatus.AnimationSetup
-                || !mmuCreation.IsMoCapMMU && mmuCreation.Status == MMUCreation.CreationStatus.FilesSetup)
-            {
-                var description = mmuCreation.Description;
-                var instance = mmuCreation.Instance;
-                Component component = null;
-                //Add the script directly to the object
-
-                System.Type compType = System.Type.GetType(description.Name);
-                Debug.Log($"Type: {compType}");
-                component = instance.AddComponent(compType); //ToDo: this type exists only after asset import
-                                                             //Fix: https://docs.unity3d.com/ScriptReference/Callbacks.DidReloadScripts.html
-                if (component == null)
+                if (mmuCreation.Status == MMUCreation.CreationStatus.FilesSetup && mmuCreation.IsMoCapMMU)
                 {
-                    Debug.Log("Still waiting for scripts to reload");
-                    mmuCreation.Status = MMUCreation.CreationStatus.MissingBehavior;
-                    CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Session);
+                    Debug.Log("Motion setup after script reload");
+
+                    string fbxAssetPath = $@"Assets/MMUs/{mmuCreation.Description.Name}/{Path.GetFileName(mmuCreation.FbxFilePath)}";
+                    var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(fbxAssetPath);
+
+                    var newState = mmuCreation.AnimatorController.AddMotion(animationClip);
+                    newState.AddStateMachineBehaviour<AnimationEndEvent>();
+
+                    var loopTransition = newState.AddExitTransition();
+                    loopTransition.destinationState = newState;
+                    loopTransition.exitTime = 1;
+                    loopTransition.hasExitTime = true;
+                    loopTransition.duration = 0;
+
+                    mmuCreation.Status = MMUCreation.CreationStatus.AnimationSetup;
+                    CreationStorage.SaveCurrent(mmuCreation);
                 }
 
-                SetupPrefabs();
+                if (mmuCreation.IsMoCapMMU && mmuCreation.Status == MMUCreation.CreationStatus.AnimationSetup
+                    || !mmuCreation.IsMoCapMMU && mmuCreation.Status == MMUCreation.CreationStatus.FilesSetup)
+                {
+                    var description = mmuCreation.Description;
+                    var instance = mmuCreation.Instance;
+                    Component component = null;
+                    //Add the script directly to the object
+
+                    System.Type compType = System.Type.GetType(description.Name);
+                    Debug.Log($"Type: {compType}");
+                    component = instance.AddComponent(compType); //ToDo: this type exists only after asset import
+                                                                 //Fix: https://docs.unity3d.com/ScriptReference/Callbacks.DidReloadScripts.html
+                    if (component == null)
+                    {
+                        Debug.Log("Still waiting for scripts to reload");
+                        mmuCreation.Status = MMUCreation.CreationStatus.MissingBehavior;
+                        CreationStorage.SaveCurrent(mmuCreation);
+                    }
+
+                    SetupPrefabs();
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// Gets called from CreateMMUWindow when the MMU is selected which is to be loaded.
+    /// </summary>
+    /// <param name="currentMMU">The selected MMU</param>
+    public static void SelectMMU(MMUCreation currentMMU)
+    {
+        _selected = currentMMU.Description.Name;
     }
 }
 #endif

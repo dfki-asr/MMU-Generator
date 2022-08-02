@@ -14,6 +14,8 @@ public class CreateMMUWindow : EditorWindow
 {
     private MMUCreation mmuCreation;
     private const string defaultScenePath = "Assets/default.unity";
+
+    private static int index;
     private void OnGUI()
     {
         /*
@@ -37,13 +39,34 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         return;
     }        */
 
-
+        var paths = CreationStorage.FindSaveFiles();
         if (mmuCreation == null)
         {
             //This probably happend due to a script reload, so try to load stored MMUCreation progress from session storage
-            if (!CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out this.mmuCreation))
+            if (paths.Count > 0)
             {
-                if(GUILayout.Button("Reset not Loaded"))
+                var selected = paths[0];
+                if(GUILayout.Button("Select MMU"))
+                {
+                    index = EditorGUILayout.Popup(index, paths.ToArray());
+                }
+                if (CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation))
+                {
+                    MMUFactory.SelectMMU(this.mmuCreation);
+                } else
+                {
+                    Debug.Log("Could not load MMU");
+                    if (GUILayout.Button("Reset not Loaded"))
+                    {
+                        this.mmuCreation = MMUFactory.New();
+                    }
+                    return;
+                }
+                
+            } else
+            {
+                Debug.Log("No MMU to load");
+                if (GUILayout.Button("Reset not Loaded"))
                 {
                     this.mmuCreation = MMUFactory.New();
                 }
@@ -52,7 +75,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         }
         if (mmuCreation.Status == MMUCreation.CreationStatus.Created)
         {
-            this.mmuCreation.Description.Name = EditorGUILayout.TextField("Name", this.mmuCreation.Description.Name);
+            this.mmuCreation.Description.Name = EditorGUILayout.TextField("Name*", this.mmuCreation.Description.Name);
             this.mmuCreation.Description.MotionType = EditorGUILayout.TextField("MotionType", this.mmuCreation.Description.MotionType);
             this.mmuCreation.Description.Author = EditorGUILayout.TextField("Author", this.mmuCreation.Description.Author);
             this.mmuCreation.Description.ShortDescription = EditorGUILayout.TextField("ShortDescription", this.mmuCreation.Description.ShortDescription);
@@ -70,10 +93,18 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                 }
             }
             EditorGUILayout.EndToggleGroup();
+            bool notcomplete = false;
+            if (string.IsNullOrEmpty(this.mmuCreation.Description.Name))
+                notcomplete = true;
+
+            EditorGUI.BeginDisabledGroup(notcomplete);
             if (GUILayout.Button("Setup"))
             {
                 MMUFactory.Setup(mmuCreation);
             }
+            EditorGUI.EndDisabledGroup();
+            if (notcomplete)
+                EditorGUILayout.HelpBox("Please fill out the required fields.", MessageType.Warning);
         }
         else if (mmuCreation.Status == MMUCreation.CreationStatus.Completed)
         {
@@ -113,18 +144,47 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             {
                 if(MMUFactory.SetupPrefabs())
                 {
-                    CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out this.mmuCreation);
+                    CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation);
                 }
                 return;
             }
             return;
         } else
         {
+            string[] names = new string[paths.Count];
+            for (int i = 0; i < paths.Count; i++ )
+            {
+                names[i] = paths[i].Substring(paths[i].IndexOf("MMUs") + 5, paths[i].IndexOf("Savefiles") -1 - (paths[i].IndexOf("MMUs") +5));
+            }
+            if (paths.Count > 0)
+            {
+                index = EditorGUILayout.Popup(index, names);
+            }
+            if (GUILayout.Button("Select MMU"))
+            {
+                CreationStorage.SaveCurrent(mmuCreation);
+                if (CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation))
+                {
+                    MMUFactory.SelectMMU(this.mmuCreation);
+                }
+                
+
+            }
+            GUILayout.Space(20);
+            if (GUILayout.Button("New"))
+            {
+                CreationStorage.SaveCurrent(this.mmuCreation);
+                this.mmuCreation = MMUFactory.New();
+                index = paths.Count;
+            }
+
+            GUILayout.FlexibleSpace();
             if (GUILayout.Button("Reset"))
             {
                 this.mmuCreation.Dispose();
                 this.mmuCreation = MMUFactory.New();
             }
+            EditorGUILayout.HelpBox("This will delete the progress of the currently selected MMU.", MessageType.Warning);
             return;
         } 
     }
@@ -132,11 +192,27 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
     private void Awake()
     {
         Debug.Log("CreateMMUWindow awake");
-        if (!CreationStorage.TryLoadCurrent(CreationStorage.Location.Both, out this.mmuCreation))
+        var paths = CreationStorage.FindSaveFiles();
+        if(paths.Count > 0)
+        {
+            if(CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation))
+            {
+                MMUFactory.SelectMMU(this.mmuCreation);
+            } else
+            {
+                this.mmuCreation = MMUFactory.New();
+                EditorApplication.quitting += OnEditorQuitting;
+            }
+        } else
         {
             this.mmuCreation = MMUFactory.New();
             EditorApplication.quitting += OnEditorQuitting;
         }
+        /*if (!CreationStorage.TryLoadCurrent("//Assets", out this.mmuCreation))
+        {
+            this.mmuCreation = MMUFactory.New();
+            EditorApplication.quitting += OnEditorQuitting;
+        }*/
     }
 
     [MenuItem("MMI/MMU Creator", false, 0)]
@@ -155,7 +231,30 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
     private static void OnEditorQuitting()
     {
         //if (MMUCreation.TryLoad(MMUCreation.CURRENT_CREATION_NAME, false, out MMUCreation mmuCreation))
-        if (CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out MMUCreation mmuCreation))
+        var paths = CreationStorage.FindSaveFiles();
+        if (paths.Count > 0)
+            //TODO: Get the name of the MMU which is selected
+        {
+            if (CreationStorage.TryLoadCurrent(paths[0], out MMUCreation mmuCreation))
+            {
+                Debug.Log("Should be loaded correctly.");
+                // Check if the mmu has just been created
+                // Saving to disk is not necessary in this case as no files have been created yet
+                if (mmuCreation.Status != MMUCreation.CreationStatus.Created)
+                {
+                    bool persistToDisk = EditorUtility.DisplayDialog("Save MMU creation progress?",
+                        $"You are currently editing { mmuCreation.Description.Name}. Do you want to save the current progress?",
+                        "Yes", "No");
+                    if (persistToDisk)
+                    {
+                        CreationStorage.SaveCurrent(mmuCreation);
+                    }
+                }
+            }
+        }
+
+        /*
+        if (CreationStorage.TryLoadCurrent("Assets//", out MMUCreation mmuCreation))
         {
             // Check if the mmu has just been created
             // Saving to disk is not necessary in this case as no files have been created yet
@@ -166,10 +265,10 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                     "Yes", "No");
                 if (persistToDisk)
                 {
-                    CreationStorage.SaveCurrent(mmuCreation, CreationStorage.Location.Disk);
+                    CreationStorage.SaveCurrent(mmuCreation);
                 }
             }
-        }
+        }*/
     }
 }
 #endif
