@@ -30,7 +30,7 @@ public static class CreationStorage
     /// <param name="location">Where the progress should be saved</param>
     public static void SaveCurrent(MMUCreation current, Location location)
     {
-        Save(CURRENT_CREATION_NAME, current, location);
+        Save(CURRENT_CREATION_NAME, current, CreationStorage.Location.Session);
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ public static class CreationStorage
     /// <returns></returns>
     public static bool TryLoadCurrent(Location location, out MMUCreation current)
     {
-        current = Load(CURRENT_CREATION_NAME, location);
+        current = Load(CURRENT_CREATION_NAME, CreationStorage.Location.Session);
         return current != null;
     }
 
