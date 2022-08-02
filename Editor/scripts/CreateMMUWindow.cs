@@ -102,11 +102,6 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                 notcomplete = true;
 
             EditorGUI.BeginDisabledGroup(notcomplete);
-                    notcomplete = false;
-            else
-                notcomplete = true;
-
-            EditorGUI.BeginDisabledGroup(notcomplete);
             if (GUILayout.Button("Setup"))
             {
                 MMUFactory.Setup(mmuCreation);
