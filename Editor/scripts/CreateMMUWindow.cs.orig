@@ -98,12 +98,16 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             }
             EditorGUILayout.EndToggleGroup();
             bool notcomplete = false;
+<<<<<<< HEAD
             if (string.IsNullOrEmpty(this.mmuCreation.Description.Name))
-                notcomplete = true;
-
-            EditorGUI.BeginDisabledGroup(notcomplete);
+=======
+            if (this.mmuCreation.Description.Name != null)
+                if (this.mmuCreation.Description.Name == "")
+                    notcomplete = true;
+                else
                     notcomplete = false;
             else
+>>>>>>> f95d56b01877089a5e8fc93b3dc7825c26063384
                 notcomplete = true;
 
             EditorGUI.BeginDisabledGroup(notcomplete);
@@ -228,6 +232,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
     private void Awake()
     {
         Debug.Log("CreateMMUWindow awake");
+<<<<<<< HEAD
         var paths = CreationStorage.FindSaveFiles();
         if(paths.Count > 0)
         {
@@ -237,6 +242,9 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                 EditorApplication.quitting += OnEditorQuitting;
             }
         } else
+=======
+        if (!CreationStorage.TryLoadCurrent(CreationStorage.Location.Session, out this.mmuCreation))
+>>>>>>> f95d56b01877089a5e8fc93b3dc7825c26063384
         {
             this.mmuCreation = MMUFactory.New();
             EditorApplication.quitting += OnEditorQuitting;
