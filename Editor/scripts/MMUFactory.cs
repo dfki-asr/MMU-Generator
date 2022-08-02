@@ -18,7 +18,6 @@ using UnityEngine;
 /// </summary>
 public class MMUFactory
 {
-    private static string _selected;
     public static string packageName = "de.dfki.mmu-generator";
     /// <summary>
     /// Creates a new MMU. 
@@ -85,16 +84,16 @@ public class MMUFactory
         dllFiles.AddRange(MMUGenerator.GetFiles("Assets//MMUs//" + mmuCreation.Description.Name + "//Dependencies").Where(s => Path.GetExtension(s) == ".dll").ToList());
 
         string tmpScripts = Path.Combine(tempDirectory, "Scripts");
-        if(!Directory.Exists(tmpScripts))
+        if (!Directory.Exists(tmpScripts))
         {
             Directory.CreateDirectory(tmpScripts);
         }
-        foreach(string cFile in classFiles)
+        foreach (string cFile in classFiles)
         {
             File.Copy(cFile, Path.Combine(tmpScripts, Path.GetFileName(cFile)));
         }
 
-        foreach(string dFile in dllFiles)
+        foreach (string dFile in dllFiles)
         {
             File.Copy(dFile, Path.Combine(tempDirectory, Path.GetFileName(dFile)));
         }
@@ -125,7 +124,7 @@ public class MMUFactory
         }
 
         //Cleanup the directory
-        
+
         AssetDatabase.ExportPackage(assets.ToArray(), $"{tempDirectory}//{mmuCreation.Description.Name}.unitypackage");
 
         MMUGenerator.CleanUpDirectory(tempDirectory, mmuCreation.Description.Name);
@@ -150,7 +149,7 @@ public class MMUFactory
         System.IO.File.Copy(appPath, System.IO.Path.Combine(zipFilePath, System.IO.Path.GetFileName("UnityEngine.dll")));
 
         //ZipFile.CreateFromDirectory(tempDirectory, zipFilePath, System.IO.Compression.CompressionLevel.Fastest, true);
-        
+
         //Remove all temporary generated files
         /*
         string[] tempFiles = Directory.GetFiles(tempDirectory);
@@ -175,7 +174,7 @@ public class MMUFactory
     {
         var description = mmuCreation.Description;
         //Choose selected
-        _selected = description.Name;
+
         Directory.CreateDirectory("Assets//MMUs//" + description.Name);
         Directory.CreateDirectory("Assets//MMUs//" + description.Name + "//Dependencies");
         Directory.CreateDirectory("Assets//MMUs//" + description.Name + "//Scripts");
@@ -238,7 +237,7 @@ public class MMUFactory
             AssetImportHelper.PendingMotionImports.Add(fbxAssetPath, () =>
             {
                 Debug.Log("PendingMotionCallback");
-                
+
                 var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(fbxAssetPath);
 
                 if (animatorController.layers.Length == 0)
@@ -279,12 +278,13 @@ public class MMUFactory
 
     public static bool SetupPrefabs()
     {
-        if (_selected != null)
+        var path = CreateMMUWindow.getPath();
+        if (path != null)
         {
-            if (CreationStorage.TryLoadCurrent("Assets//MMUs//" + _selected + "//Savefiles//", out MMUCreation mmuCreation))
+            if (CreationStorage.TryLoadCurrent(path, out MMUCreation mmuCreation))
             {
                 var description = mmuCreation.Description;
-                Debug.Log("Test of SetupPrefabs: " + mmuCreation.Instance.transform.childCount);
+                //Debug.Log("Test of SetupPrefabs: " + mmuCreation.Instance.transform.childCount);
                 var instance = mmuCreation.Instance;
                 Component c = null;
                 c = instance.GetComponent<UnityMMUBase>();
@@ -323,9 +323,10 @@ public class MMUFactory
     private static void OnScriptsReload()
     {
         Debug.Log("ScriptReloadCallback");
-        if (_selected != null)
+        var path = CreateMMUWindow.getPath();
+        if (path != null)
         {
-            if (CreationStorage.TryLoadCurrent("Assets//MMUs//" + _selected + "//SaveFiles//", out MMUCreation mmuCreation))
+            if (CreationStorage.TryLoadCurrent(path, out MMUCreation mmuCreation))
             {
                 if (mmuCreation.Status == MMUCreation.CreationStatus.FilesSetup && mmuCreation.IsMoCapMMU)
                 {
@@ -371,14 +372,6 @@ public class MMUFactory
             }
         }
     }
-
-    /// <summary>
-    /// Gets called from CreateMMUWindow when the MMU is selected which is to be loaded.
-    /// </summary>
-    /// <param name="currentMMU">The selected MMU</param>
-    public static void SelectMMU(MMUCreation currentMMU)
-    {
-        _selected = currentMMU.Description.Name;
-    }
 }
+    
 #endif

@@ -222,8 +222,13 @@ public class MMUCreationConverter : JsonConverter<MMUCreation>
                         toCreate.Prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
                         break;
                     case "Instance":
+                        //Works for Session loading but not over disk - inbetween sessions.
                         int instanceId = Convert.ToInt32(reader.Value);
                         toCreate.Instance = EditorUtility.InstanceIDToObject(instanceId) as GameObject;
+                        if (toCreate.Instance == null)
+                        {
+                            toCreate.Instance = GameObject.Find(toCreate.Description.Name);
+                        }
                         break;
                     case "AnimatorController":
                         assetPath = reader.Value as string;

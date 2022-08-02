@@ -218,7 +218,7 @@ public class MMUGenerator
             }
         };
 
-        System.IO.File.WriteAllText("Assets//" +description.Name + "//description.json", MMICSharp.Common.Communication.Serialization.ToJsonString(description));
+        System.IO.File.WriteAllText("Assets//MMUs//" +description.Name + "//description.json", MMICSharp.Common.Communication.Serialization.ToJsonString(description));
 
         //Save the desciption file
         System.IO.File.WriteAllText(path + "description.json", MMICSharp.Common.Communication.Serialization.ToJsonString(description));
@@ -353,7 +353,7 @@ public class AutoCodeGenerator
 
 
             //Find the script with the same name
-            string file = MMUGenerator.GetFiles("Assets//" + mmuBase.name + "//Scripts//").ToList().Find(s => Path.GetExtension(s) == ".cs");
+            string file = MMUGenerator.GetFiles("Assets//MMUs//" + mmuBase.name + "//Scripts//").ToList().Find(s => Path.GetExtension(s) == ".cs");
 
             if (file == null)
             {
@@ -406,7 +406,7 @@ public class AutoCodeGenerator
         if (mmuBase != null)
         {
             //Find the script with the same name
-            string file = MMUGenerator.GetFiles("Assets//" + mmuBase.name + "//Scripts//").ToList().Find(s => Path.GetExtension(s) == ".cs");
+            string file = MMUGenerator.GetFiles("Assets//MMUs//" + mmuBase.name + "//Scripts//").ToList().Find(s => Path.GetExtension(s) == ".cs");
 
             List<string> lines = File.ReadAllLines(file).ToList();
 
