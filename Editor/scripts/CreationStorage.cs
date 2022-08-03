@@ -152,9 +152,11 @@ public static class CreationStorage
                 return mmu;
             }
             else
+                Debug.Log("Error FileLoad: File has not the right Format.");
                 return null;
         }
         else
+            Debug.Log($"Error FileLoad: File doesn't exist with path: {path}");
             return null;
     }
 

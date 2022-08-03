@@ -16,6 +16,8 @@ public class CreateMMUWindow : EditorWindow
     private const string defaultScenePath = "Assets/default.unity";
 
     private static int index;
+    private static string path;
+    
     private void OnGUI()
     {
         /*
@@ -50,21 +52,37 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             }               
             if (paths.Count > 0)
             {
-                EditorGUILayout.LabelField("Press select to choose the currently selected MMU.");
-                index = EditorGUILayout.Popup(index, names);
+                EditorGUILayout.LabelField("No MMU selected.");
+                EditorGUILayout.LabelField("Press select to log in the currently selected MMU.");
+                index= EditorGUILayout.Popup(index, names);
                 if (GUILayout.Button("Select MMU"))
                 {
-                        CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation);
-                        return;
-                }
-                if (!CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation))
-                
-                    Debug.Log("Could not load MMU");
-                    if (GUILayout.Button("Reset not Loaded"))
-                    {
-                        this.mmuCreation = MMUFactory.New();
-                    }
+                    path = paths[index];
+                    CreationStorage.TryLoadCurrent(path, out this.mmuCreation);
                     return;
+                }
+                GUILayout.Space(10);
+                if (GUILayout.Button("New"))
+                {
+                    path = "Assets//";
+                    this.mmuCreation = MMUFactory.New();
+                    return;
+                }
+                if (path != null)
+                {
+                    if (!CreationStorage.TryLoadCurrent(paths[0], out this.mmuCreation))
+                    {
+
+                        Debug.Log("Could not load MMU");
+                        if (GUILayout.Button("Reset not Loaded"))
+                        {
+                            path = "Assets//";
+                            this.mmuCreation = MMUFactory.New();
+                        }
+                    }
+                    
+                } return;
+
                 
                 
         } else
@@ -72,6 +90,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                 Debug.Log("No MMU to load");
                 if (GUILayout.Button("Reset not Loaded"))
                 {
+                    path = "Assets//";
                     this.mmuCreation = MMUFactory.New();
                 }
                 return;
@@ -105,6 +124,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             if (GUILayout.Button("Setup"))
             {
                 MMUFactory.Setup(mmuCreation);
+                
                 paths = CreationStorage.FindSaveFiles();
                 string[] names = new string[paths.Count];
                 for (int i = 0; i < paths.Count; i++)
@@ -115,7 +135,13 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                 for(int i = 0; i < names.Length; i++)
                 {
                     if (names[i] == mmuCreation.Description.Name)
-                        index = i; 
+                    {
+                        Debug.Log($"Found with index {i} ");
+                        index = i;
+                        path = paths[index];
+                        CreationStorage.TryLoadCurrent(path, out this.mmuCreation);
+                    }
+                    
                 }
 
                 return;
@@ -138,22 +164,52 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
                     EditorUtility.DisplayDialog("MMU exported", $"The MMU {mmuCreation.Description.Name} has been exported", "OK");
                 }
             }
-
+            /*
             if (GUILayout.Button("Create a new MMU"))
             {
                 CreationStorage.SaveCurrent(this.mmuCreation);
+                path = "Assets//";
                 this.mmuCreation = MMUFactory.New();
                 return;
+            }*/
+
+            string[] names = new string[paths.Count];
+            for (int i = 0; i < paths.Count; i++)
+            {
+                names[i] = paths[i].Substring(paths[i].IndexOf("MMUs") + 5, paths[i].IndexOf("Savefiles") - 1 - (paths[i].IndexOf("MMUs") + 5));
+            }
+            GUILayout.FlexibleSpace();
+            if (paths.Count > 0)
+            {
+                EditorGUILayout.LabelField($"Currently selected: {this.mmuCreation.Description.Name}");
+                EditorGUILayout.LabelField("Press select to log in the currently selected MMU.");
+                index = EditorGUILayout.Popup(index, names);
+
+                if (GUILayout.Button("Select MMU"))
+                {
+                    path = paths[index];
+                    CreationStorage.SaveCurrent(this.mmuCreation);
+                    CreationStorage.TryLoadCurrent(path, out this.mmuCreation);
+                }
+            }
+
+            GUILayout.Space(10);
+            if (GUILayout.Button("New"))
+            {
+                CreationStorage.SaveCurrent(this.mmuCreation);
+                path = "Assets//";
+                this.mmuCreation = MMUFactory.New();
             }
         }
         else if (mmuCreation.Status == MMUCreation.CreationStatus.MissingBehavior)
         {
             EditorGUILayout.LabelField("Please add behavior manually to proceed.");
-            if(GUILayout.Button("Confirm"))
+            EditorGUILayout.LabelField("Press Confirm to check MMU status.");
+            if (GUILayout.Button("Confirm"))
             {
                 if(MMUFactory.SetupPrefabs())
                 {
-                    CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation);
+                    CreationStorage.TryLoadCurrent(path, out this.mmuCreation);
                 }
                 return;
             }
@@ -166,13 +222,15 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             GUILayout.FlexibleSpace();
             if (paths.Count > 0)
             {
-                EditorGUILayout.LabelField("Press select to choose the currently selected MMU.");
+                EditorGUILayout.LabelField($"Currently selected: {this.mmuCreation.Description.Name}");
+                EditorGUILayout.LabelField("Press select to log in the currently selected MMU.");
                 index = EditorGUILayout.Popup(index, names);
 
                 if (GUILayout.Button("Select MMU"))
                 {
+                    path = paths[index];
                     CreationStorage.SaveCurrent(this.mmuCreation);
-                    CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation);
+                    CreationStorage.TryLoadCurrent(path, out this.mmuCreation);
                 }
             }
             
@@ -180,11 +238,26 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             if (GUILayout.Button("New"))
             {
                 CreationStorage.SaveCurrent(this.mmuCreation);
+                path = "Assets//";
                 this.mmuCreation = MMUFactory.New();
             }
             return;
         } else
         {
+
+            if (MMUFactory.PreSetupPrefabs(path))
+                return;
+            EditorGUILayout.LabelField($"Behaviour is Missing for MMU: {this.mmuCreation.Description.Name}");
+            EditorGUILayout.LabelField("If this window does not change, something went wrong.");
+            if (GUILayout.Button("Reset"))
+            {
+                this.mmuCreation.Dispose();
+                path = "Assets//";
+                this.mmuCreation = MMUFactory.New();
+            }
+            EditorGUILayout.HelpBox("This will delete the progress of the currently selected MMU.", MessageType.Warning);
+
+            GUILayout.FlexibleSpace();
             string[] names = new string[paths.Count];
             for (int i = 0; i < paths.Count; i++ )
             {
@@ -192,30 +265,26 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
             }
             if (paths.Count > 0)
             {
-                EditorGUILayout.LabelField("Press select to choose the currently selected MMU.");
+                EditorGUILayout.LabelField($"Currently selected: {this.mmuCreation.Description.Name}");
+                EditorGUILayout.LabelField("Press select to log in the currently selected MMU.");
                 index = EditorGUILayout.Popup(index, names);
 
                 if (GUILayout.Button("Select MMU"))
                 {
-                    CreationStorage.SaveCurrent(mmuCreation);
-                    CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation);
+                    path = paths[index];
+                    CreationStorage.SaveCurrent(this.mmuCreation);
+                    CreationStorage.TryLoadCurrent(path, out this.mmuCreation);
                 }
             }
-            GUILayout.FlexibleSpace();
-            
+
+            GUILayout.Space(10);
             if (GUILayout.Button("New"))
             {
                 CreationStorage.SaveCurrent(this.mmuCreation);
+                path = "Assets//";
                 this.mmuCreation = MMUFactory.New();
             }
-
-            GUILayout.Space(5);
-            if (GUILayout.Button("Reset"))
-            {
-                this.mmuCreation.Dispose();
-                this.mmuCreation = MMUFactory.New();
-            }
-            EditorGUILayout.HelpBox("This will delete the progress of the currently selected MMU.", MessageType.Warning);
+            
             return;
         } 
     }
@@ -223,7 +292,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
     private void Awake()
     {
         Debug.Log("CreateMMUWindow awake");
-        var paths = CreationStorage.FindSaveFiles();
+        /*var paths = CreationStorage.FindSaveFiles();
         if(paths.Count > 0)
         {
             if(!CreationStorage.TryLoadCurrent(paths[index], out this.mmuCreation))
@@ -235,7 +304,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         {
             this.mmuCreation = MMUFactory.New();
             EditorApplication.quitting += OnEditorQuitting;
-        }
+        }*/
         /*if (!CreationStorage.TryLoadCurrent("//Assets", out this.mmuCreation))
         {
             this.mmuCreation = MMUFactory.New();
@@ -243,9 +312,13 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         }*/
     }
 
+    public string GetName() { return this.mmuCreation.Description.Name; }
+
     public static string getPath()
     {
         var paths = CreationStorage.FindSaveFiles();
+        Debug.Log($"Index is: {index} and Pathnumber is: {paths.Count}");
+        Debug.Log($"Path is {path}");
         if (paths.Count > 0 && index < paths.Count)
         {
             return paths[index];
@@ -273,7 +346,7 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         if (paths.Count > 0)
             //TODO: Get the name of the MMU which is selected
         {
-            if (CreationStorage.TryLoadCurrent(paths[0], out MMUCreation mmuCreation))
+            if (CreationStorage.TryLoadCurrent(path, out MMUCreation mmuCreation))
             {
                 Debug.Log("Should be loaded correctly.");
                 // Check if the mmu has just been created

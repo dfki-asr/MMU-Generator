@@ -13,6 +13,8 @@ using UnityEditor.Animations;
 using UnityEditor.Callbacks;
 using UnityEngine;
 
+using UnityEditor.SceneManagement;
+
 /// <summary>
 /// This class provides functionality of intermediate steps in the process of a MMU creation.
 /// </summary>
@@ -26,7 +28,7 @@ public class MMUFactory
     public static MMUCreation New()
     {
         AssetImportHelper.PendingMotionImports.Clear();
-        CreationStorage.DeleteCurrent();
+        //CreationStorage.DeleteCurrent();
         var newCreation = new MMUCreation();
         newCreation.Description.Version = "1.0";
         newCreation.Description.MotionType = "";
@@ -271,14 +273,18 @@ public class MMUFactory
 
         mmuCreation.Status = MMUCreation.CreationStatus.FilesSetup;
         CreationStorage.SaveCurrent(mmuCreation);
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        
 
         //Refresh the asset database to show the new filestructure
+        Debug.Log("Refreshing Database");
         AssetDatabase.Refresh();
     }
 
     public static bool SetupPrefabs()
     {
         var path = CreateMMUWindow.getPath();
+        Debug.Log("Path is: "+ path);
         if (path != null)
         {
             if (CreationStorage.TryLoadCurrent(path, out MMUCreation mmuCreation))
@@ -324,6 +330,12 @@ public class MMUFactory
     {
         Debug.Log("ScriptReloadCallback");
         var path = CreateMMUWindow.getPath();
+        Debug.Log(path);
+        PreSetupPrefabs(path);
+    }
+
+    public static bool PreSetupPrefabs(string path)
+    {
         if (path != null)
         {
             if (CreationStorage.TryLoadCurrent(path, out MMUCreation mmuCreation))
@@ -339,6 +351,7 @@ public class MMUFactory
                     newState.AddStateMachineBehaviour<AnimationEndEvent>();
 
                     var loopTransition = newState.AddExitTransition();
+
                     loopTransition.destinationState = newState;
                     loopTransition.exitTime = 1;
                     loopTransition.hasExitTime = true;
@@ -355,6 +368,7 @@ public class MMUFactory
                     var instance = mmuCreation.Instance;
                     Component component = null;
                     //Add the script directly to the object
+                    //TODO: Script is not put on GameObject.
 
                     System.Type compType = System.Type.GetType(description.Name);
                     Debug.Log($"Type: {compType}");
@@ -370,7 +384,8 @@ public class MMUFactory
                     SetupPrefabs();
                 }
             }
-        }
+            return true;
+        } return false;
     }
 }
     
