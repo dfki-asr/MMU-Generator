@@ -247,32 +247,32 @@ public class MMUAdapterImplementation : MMIAdapter.Iface
 
 
 
-    public byte[] CreateCheckpoint(string mmuID, string sessionID)
+    public byte[] CreateCheckpoint(string mmuID, string sessionID, string avatarID)
     {
         if (mmuID == MMUDescription.ID)
         {
-            return MMUInstance.CreateCheckpoint();
+            return MMUInstance.CreateCheckpoint(avatarID);
         }
 
         return null;      
     }
 
-    public MBoolResponse RestoreCheckpoint(string mmuID, string sessionID, byte[] checkpointData)
+    public MBoolResponse RestoreCheckpoint(string mmuID, string sessionID, byte[] checkpointData, string avatarID)
     {
         if (mmuID == MMUDescription.ID)
         {
-            return MMUInstance.RestoreCheckpoint(checkpointData);
+            return MMUInstance.RestoreCheckpoint(checkpointData, avatarID);
         }
 
         return new MBoolResponse(false);
     }
 
 
-    public MBoolResponse Dispose(string mmuID, string sessionID)
+    public MBoolResponse Dispose(string mmuID, string sessionID, string avatarID)
     {
         if (mmuID == MMUDescription.ID)
         {
-            return MMUInstance.Dispose(new Dictionary<string, string>());
+            return MMUInstance.Dispose(avatarID,new Dictionary<string, string>());
         }
 
         return new MBoolResponse(false);
@@ -287,11 +287,11 @@ public class MMUAdapterImplementation : MMIAdapter.Iface
         return null;
     }
 
-    public Dictionary<string, string> ExecuteFunction(string name, Dictionary<string, string> parameters, string mmuID, string sessionID)
+    public Dictionary<string, string> ExecuteFunction(string name, Dictionary<string, string> parameters, string mmuID, string sessionID, string avatarID)
     {
         if (mmuID == MMUDescription.ID)
         {
-            return MMUInstance.ExecuteFunction(name, parameters);
+            return MMUInstance.ExecuteFunction(name,avatarID, parameters);
         }
         return null;
     }
