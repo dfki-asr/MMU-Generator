@@ -85,7 +85,7 @@ public class MMUAdapter: MonoBehaviour
             this.gameObject.AddComponent<MainThreadDispatcher>();
 
         this.MMUInstance = this.GetComponent<UnityMMUBase>();
-        this.MMUDescription = Serialization.FromJsonString<MMUDescription>(System.IO.File.ReadAllText("Assets/"+ this.MMUInstance.name +"/"+ "description.json"));
+        this.MMUDescription = Serialization.FromJsonString<MMUDescription>(System.IO.File.ReadAllText("Assets/MMUs/"+ this.MMUInstance.name +"/"+ "description.json"));
 
 
         if(this.MMUDescription.Version == null)
