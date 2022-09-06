@@ -70,6 +70,13 @@ public class MMUAdapter: MonoBehaviour
 
     private void Start()
     {
+
+        MMICSharp.Logger.Instance = new MMIAdapterUnity.UnityLogger(false)
+        {
+            //Log everything
+            Level = MMICSharp.Log_level.L_DEBUG
+        };
+
         this.address = this.Address.ToMipAddress();
         this.registerAddress = this.RegisterAddress.ToMipAddress();
 
