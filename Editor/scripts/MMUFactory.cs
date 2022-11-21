@@ -125,6 +125,24 @@ public class MMUFactory
             assets.Add(path);
         }
 
+        foreach (var guid in AssetDatabase.FindAssets("*", new string[] { $"Assets//ONNXmodels" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            assets.Add(path);
+        }
+
+        foreach (var guid in AssetDatabase.FindAssets("*", new string[] { $"Assets//StreamingAssets" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            assets.Add(path);
+        }
+
+        foreach (var guid in AssetDatabase.FindAssets("*", new string[] { $"Assets//Scripts" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            assets.Add(path);
+        }
+
         //Cleanup the directory
 
         AssetDatabase.ExportPackage(assets.ToArray(), $"{tempDirectory}//{mmuCreation.Description.Name}.unitypackage");
