@@ -134,7 +134,9 @@ public static class CreationStorage
 
     private static void SaveWithPath(MMUCreation creation, string path = "Assets//")
     {
+        //File.WriteAllText(path + "SaveFile.json", Serialization.ToJsonString<MMUCreation>(creation));
         string json = JsonConvert.SerializeObject(creation, Formatting.Indented, new MMUCreationConverter(), new MMUDescriptionConverter());
+        //File.WriteAllBytes(path + "SaveFile.json", Serialization.ToJsonBinary(json))
         File.WriteAllText(path + "SaveFile.json" , Serialization.ToJsonString(json));
     }
 

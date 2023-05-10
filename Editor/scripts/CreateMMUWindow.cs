@@ -339,6 +339,15 @@ if (PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone) != ApiC
         EditorApplication.quitting += OnEditorQuitting;
     }
 
+    [MenuItem("Assets/LoadMMUState")]
+    private static void LoadConfig()
+    {
+        if (Selection.activeObject.GetType() == typeof(TextAsset))
+        {
+            Debug.Log("Load Config: " + Selection.activeObject);
+        }
+    }
+
     private static void OnEditorQuitting()
     {
         //if (MMUCreation.TryLoad(MMUCreation.CURRENT_CREATION_NAME, false, out MMUCreation mmuCreation))
