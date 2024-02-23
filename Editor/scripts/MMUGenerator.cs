@@ -77,7 +77,15 @@ public class MMUGenerator
             }       
         } else { //V2 code
             string assetPath = AssetDatabase.GetAssetPath(mmuPrefab);
-            AssetImporter.GetAtPath(assetPath).SetAssetBundleNameAndVariant(name, "");
+            string assetFolder = Path.GetDirectoryName(assetPath);
+            var files = Directory.EnumerateFiles(assetFolder, "*", SearchOption.AllDirectories);
+            foreach(string f in files)
+            {
+                var asset = AssetImporter.GetAtPath(f);
+                if(asset != null)
+                    asset.SetAssetBundleNameAndVariant(name, "");
+            }
+            //AssetImporter.GetAtPath(assetPath).SetAssetBundleNameAndVariant(name, "");
         }
     }
 
